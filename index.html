@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Batalha das Notas</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0d14;
+      --surface: #16161f;
+      --surface2: #1e1e2a;
+      --border: rgba(255,255,255,0.07);
+      --border2: rgba(255,255,255,0.13);
+      --purple: #a78bfa;
+      --purple-dark: #7c3aed;
+      --purple-glow: rgba(167,139,250,0.2);
+      --coral: #fb7185;
+      --coral-glow: rgba(251,113,133,0.2);
+      --text: #f1f0f8;
+      --muted: #7c7a96;
+      --pixel: "Press Start 2P", monospace;
+      --body: "DM Sans", sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--body);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(167,139,250,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(167,139,250,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .wrapper {
+      position: relative;
+      z-index: 1;
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 4rem;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+      animation: fadeDown 0.5s ease both;
+    }
+    .header-season {
+      font-family: var(--pixel);
+      font-size: 8px;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      margin-bottom: 1rem;
+    }
+    .header-title {
+      font-family: var(--pixel);
+      font-size: clamp(16px, 4vw, 24px);
+      color: var(--text);
+      line-height: 1.6;
+      text-shadow: 0 0 20px var(--purple-glow), 0 0 40px var(--purple-glow);
+    }
+    .header-title span.p { color: var(--purple); }
+
+    .scoreboard {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 1rem;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      animation: fadeUp 0.5s 0.1s ease both;
+    }
+
+    .player-card {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 16px;
+      padding: 1.5rem 1rem;
+      text-align: center;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .player-card.leader-a {
+      border-color: var(--purple);
+      box-shadow: 0 0 24px var(--purple-glow), inset 0 0 24px rgba(167,139,250,0.04);
+    }
+    .player-card.leader-b {
+      border-color: var(--coral);
+      box-shadow: 0 0 24px var(--coral-glow), inset 0 0 24px rgba(251,113,133,0.04);
+    }
+
+    .player-avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      margin: 0 auto 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--pixel);
+      font-size: 18px;
+    }
+    .player-avatar.a { background: var(--purple-glow); color: var(--purple); border: 1px solid var(--purple); }
+    .player-avatar.b { background: var(--coral-glow); color: var(--coral); border: 1px solid var(--coral); }
+
+    .player-name-display {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.5rem;
+    }
+    .player-pts {
+      font-family: var(--pixel);
+      font-size: 36px;
+      line-height: 1;
+    }
+    .player-pts.a { color: var(--purple); text-shadow: 0 0 12px var(--purple-glow); }
+    .player-pts.b { color: var(--coral); text-shadow: 0 0 12px var(--coral-glow); }
+    .pts-label { font-size: 10px; color: var(--muted); margin-top: 4px; font-family: var(--pixel); }
+
+    .vs-col { text-align: center; }
+    .vs-text { font-family: var(--pixel); font-size: 14px; color: var(--muted); display: block; margin-bottom: 6px; }
+    .crown-icon { font-size: 22px; display: block; min-height: 28px; }
+
+    .progress-wrap { margin-bottom: 1.25rem; animation: fadeUp 0.5s 0.15s ease both; }
+    .progress-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+    .progress-track { height: 8px; border-radius: 4px; background: var(--surface2); display: flex; overflow: hidden; border: 1px solid var(--border); }
+    .progress-a { background: var(--purple); height: 100%; transition: width 0.5s cubic-bezier(0.34,1.56,0.64,1); box-shadow: 0 0 8px var(--purple-glow); }
+    .progress-b { background: var(--coral); height: 100%; transition: width 0.5s cubic-bezier(0.34,1.56,0.64,1); box-shadow: 0 0 8px var(--coral-glow); }
+
+    .status-banner {
+      text-align: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.65rem 1rem;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 2rem;
+      animation: fadeUp 0.5s 0.2s ease both;
+    }
+    .status-banner strong { color: var(--text); font-weight: 600; }
+
+    /* ── FORM (só aparece se for a jogadora A) ── */
+    .add-card {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      animation: fadeUp 0.5s 0.25s ease both;
+    }
+    .add-card-title { font-family: var(--pixel); font-size: 9px; color: var(--muted); letter-spacing: 0.1em; margin-bottom: 1.25rem; }
+
+    .scores-row { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 12px; margin-bottom: 1rem; }
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+
+    input[type="text"], input[type="number"] {
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      padding: 0 12px;
+      height: 40px;
+      color: var(--text);
+      font-family: var(--body);
+      font-size: 14px;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px var(--purple-glow); }
+    input::placeholder { color: var(--muted); opacity: 0.6; }
+
+    .btn-register {
+      width: 100%;
+      height: 44px;
+      background: var(--purple-dark);
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-family: var(--pixel);
+      font-size: 9px;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+    }
+    .btn-register:hover { background: var(--purple); box-shadow: 0 0 16px var(--purple-glow); }
+    .btn-register:active { transform: scale(0.98); }
+    .err-msg { font-size: 12px; color: var(--coral); margin-top: 8px; min-height: 16px; }
+
+    .history-title { font-family: var(--pixel); font-size: 9px; color: var(--muted); letter-spacing: 0.1em; margin-bottom: 1rem; animation: fadeUp 0.5s 0.3s ease both; }
+
+    .round-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.85rem 1rem;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: border-color 0.2s;
+    }
+    .round-item:hover { border-color: var(--border2); }
+    .round-subject { flex: 1; font-size: 14px; font-weight: 500; color: var(--text); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .round-scores { display: flex; align-items: center; gap: 6px; font-size: 13px; flex-shrink: 0; }
+    .sc-a { color: var(--purple); font-weight: 600; }
+    .sc-b { color: var(--coral); font-weight: 600; }
+    .sc-sep { color: var(--muted); }
+
+    .badge { font-size: 10px; padding: 3px 10px; border-radius: 99px; font-weight: 600; flex-shrink: 0; white-space: nowrap; }
+    .badge-a { background: var(--purple-glow); color: var(--purple); border: 1px solid var(--purple); }
+    .badge-b { background: var(--coral-glow); color: var(--coral); border: 1px solid var(--coral); }
+    .badge-tie { background: var(--surface2); color: var(--muted); border: 1px solid var(--border2); }
+
+    .btn-del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 14px; padding: 4px; border-radius: 6px; line-height: 1; transition: color 0.2s; flex-shrink: 0; }
+    .btn-del:hover { color: var(--coral); }
+
+    .empty-state { text-align: center; padding: 2.5rem; color: var(--muted); font-size: 13px; font-family: var(--pixel); line-height: 2; }
+
+    /* ── LOGIN ── */
+    .login-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    .login-card {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 20px;
+      padding: 2.5rem 2rem;
+      max-width: 360px;
+      width: 100%;
+      text-align: center;
+    }
+    .login-title { font-family: var(--pixel); font-size: 12px; color: var(--text); line-height: 1.8; margin-bottom: 0.5rem; }
+    .login-title span { color: var(--purple); }
+    .login-sub { font-size: 13px; color: var(--muted); margin-bottom: 2rem; }
+    .login-btns { display: flex; flex-direction: column; gap: 12px; }
+    .btn-player {
+      height: 48px;
+      border: 1px solid;
+      border-radius: 12px;
+      font-family: var(--pixel);
+      font-size: 9px;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      background: transparent;
+    }
+    .btn-player:active { transform: scale(0.98); }
+    .btn-player.a { border-color: var(--purple); color: var(--purple); }
+    .btn-player.a:hover { background: var(--purple-glow); }
+    .btn-player.b { border-color: var(--coral); color: var(--coral); }
+    .btn-player.b:hover { background: var(--coral-glow); }
+
+    @keyframes fadeDown { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 480px) {
+      .scoreboard { gap: 0.5rem; }
+      .player-pts { font-size: 28px; }
+      .scores-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- APP -->
+<div class="wrapper">
+
+  <header class="header">
+    <div class="header-season">&#9670; temporada final &mdash; 2025 &#9670;</div>
+    <div class="header-title"><span class="p">BATALHA</span><br>DAS NOTAS</div>
+  </header>
+
+  <div class="scoreboard">
+    <div class="player-card" id="card-a">
+      <div class="player-avatar a">C</div>
+      <div class="player-name-display">Clarice</div>
+      <div class="player-pts a" id="pts-a">0</div>
+      <div class="pts-label">pts</div>
+    </div>
+    <div class="vs-col">
+      <span class="crown-icon" id="crown"></span>
+      <span class="vs-text">VS</span>
+    </div>
+    <div class="player-card" id="card-b">
+      <div class="player-avatar b">D</div>
+      <div class="player-name-display">Daniel</div>
+      <div class="player-pts b" id="pts-b">0</div>
+      <div class="pts-label">pts</div>
+    </div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-labels">
+      <span id="pct-a-label">Clarice — 0%</span>
+      <span id="pct-b-label">Daniel — 0%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-a" id="bar-a" style="width:50%"></div>
+      <div class="progress-b" id="bar-b" style="width:50%"></div>
+    </div>
+  </div>
+
+  <div class="status-banner" id="status-bar">carregando...</div>
+
+  <div class="add-card" id="add-card">
+    <div class="add-card-title">&#9658; nova rodada</div>
+    <div class="scores-row">
+      <div class="field">
+        <label>matéria</label>
+        <input type="text" id="input-subject" placeholder="ex: Matemática" maxlength="30" />
+      </div>
+      <div class="field">
+        <label>sua nota</label>
+        <input type="number" id="input-sa" placeholder="0–10" min="0" max="10" step="0.1" />
+      </div>
+      <div class="field">
+        <label>nota do Daniel</label>
+        <input type="number" id="input-sb" placeholder="0–10" min="0" max="10" step="0.1" />
+      </div>
+    </div>
+    <button class="btn-register" onclick="addRound()">&#9658; registrar resultado</button>
+    <div class="err-msg" id="err-msg"></div>
+  </div>
+
+  <div class="history-title">&#9632; histórico de rodadas</div>
+  <div id="rounds-list"><div class="empty-state">carregando...</div></div>
+
+</div>
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, push, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCdYgyHaKVMNeSrXpKKTfYSZZieS--6mn4",
+    authDomain: "campnotas.firebaseapp.com",
+    databaseURL: "https://campnotas-default-rtdb.firebaseio.com",
+    projectId: "campnotas",
+    storageBucket: "campnotas.firebasestorage.app",
+    messagingSenderId: "278228288345",
+    appId: "1:278228288345:web:d8f60776520210fc690248"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const roundsRef = ref(db, 'rounds');
+
+  let roundsData = {};
+
+  window.addRound = function() {
+    const subject = document.getElementById('input-subject').value.trim();
+    const sa = parseFloat(document.getElementById('input-sa').value);
+    const sb = parseFloat(document.getElementById('input-sb').value);
+    const err = document.getElementById('err-msg');
+    if (!subject) { err.textContent = 'Preencha o nome da matéria.'; return; }
+    if (isNaN(sa) || isNaN(sb)) { err.textContent = 'Preencha as duas notas.'; return; }
+    if (sa < 0 || sa > 10 || sb < 0 || sb > 10) { err.textContent = 'Notas devem ser entre 0 e 10.'; return; }
+    err.textContent = '';
+    push(roundsRef, { subject, sa, sb, ts: Date.now() });
+    document.getElementById('input-subject').value = '';
+    document.getElementById('input-sa').value = '';
+    document.getElementById('input-sb').value = '';
+  };
+
+  window.removeRound = function(key) {
+    remove(ref(db, 'rounds/' + key));
+  };
+
+  // Escuta mudanças em tempo real
+  onValue(roundsRef, (snapshot) => {
+    roundsData = snapshot.val() || {};
+    render();
+  });
+
+  function render() {
+    const rounds = Object.entries(roundsData)
+      .map(([key, val]) => ({ key, ...val }))
+      .sort((a, b) => a.ts - b.ts);
+
+    let ptsA = 0, ptsB = 0;
+    rounds.forEach(r => {
+      if (r.sa > r.sb) ptsA++;
+      else if (r.sb > r.sa) ptsB++;
+    });
+
+    document.getElementById('pts-a').textContent = ptsA;
+    document.getElementById('pts-b').textContent = ptsB;
+
+    const total = ptsA + ptsB || 1;
+    const pctA = Math.round(ptsA / total * 100);
+    const pctB = 100 - pctA;
+    document.getElementById('bar-a').style.width = pctA + '%';
+    document.getElementById('bar-b').style.width = pctB + '%';
+    document.getElementById('pct-a-label').textContent = 'Clarice — ' + (ptsA + ptsB > 0 ? pctA + '%' : '0%');
+    document.getElementById('pct-b-label').textContent = 'Daniel — ' + (ptsA + ptsB > 0 ? pctB + '%' : '0%');
+
+    const cardA = document.getElementById('card-a');
+    const cardB = document.getElementById('card-b');
+    const crown = document.getElementById('crown');
+    cardA.classList.remove('leader-a', 'leader-b');
+    cardB.classList.remove('leader-a', 'leader-b');
+    crown.textContent = '';
+
+    if (rounds.length === 0) {
+      document.getElementById('status-bar').innerHTML = 'Nenhuma rodada ainda — que comecem os jogos!';
+    } else if (ptsA > ptsB) {
+      cardA.classList.add('leader-a');
+      crown.textContent = '👑';
+      document.getElementById('status-bar').innerHTML =
+        '<strong>Clarice</strong> tá dominando com <strong>' + ptsA + ' ponto' + (ptsA !== 1 ? 's' : '') + '</strong> — reage, Daniel!';
+    } else if (ptsB > ptsA) {
+      cardB.classList.add('leader-b');
+      crown.textContent = '👑';
+      document.getElementById('status-bar').innerHTML =
+        '<strong>Daniel</strong> tá dominando com <strong>' + ptsB + ' ponto' + (ptsB !== 1 ? 's' : '') + '</strong> — reage, Clarice!';
+    } else {
+      document.getElementById('status-bar').innerHTML =
+        'EMPATE! <strong>' + ptsA + ' × ' + ptsB + '</strong> — a próxima matéria decide!';
+    }
+
+    const list = document.getElementById('rounds-list');
+    if (rounds.length === 0) {
+      list.innerHTML = '<div class="empty-state">INSERT COIN<br>para começar</div>';
+      return;
+    }
+
+    list.innerHTML = [...rounds].reverse().map(r => {
+      let badge = '';
+      if (r.sa > r.sb) badge = '<span class="badge badge-a">+1 Clarice</span>';
+      else if (r.sb > r.sa) badge = '<span class="badge badge-b">+1 Daniel</span>';
+      else badge = '<span class="badge badge-tie">empate</span>';
+
+      const delBtn = '<button class="btn-del" onclick="removeRound(\'' + r.key + '\')" title="Remover">✕</button>';
+
+      return '<div class="round-item">' +
+        '<span class="round-subject">' + r.subject + '</span>' +
+        '<span class="round-scores">' +
+          '<span class="sc-a">' + Number(r.sa).toFixed(1) + '</span>' +
+          '<span class="sc-sep">×</span>' +
+          '<span class="sc-b">' + Number(r.sb).toFixed(1) + '</span>' +
+        '</span>' +
+        badge + delBtn +
+      '</div>';
+    }).join('');
+  }
+</script>
+</body>
+</html>
